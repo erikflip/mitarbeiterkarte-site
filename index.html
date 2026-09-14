@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Mitarbeiterausweis</title>
+<style>
+  :root {
+    --bg: #eef0f4;
+    --card: #ffffff;
+    --ink: #1c2130;
+    --muted: #6b7280;
+    --blue-50: #eef1ff;
+    --blue-600: #4b5fd6;
+    --red-50: #fdeeee;
+    --red-600: #c1443c;
+    --border: #e7e9ef;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    min-height: 100%;
+    background: var(--bg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: var(--ink);
+  }
+
+  body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 20px;
+  }
+
+  .card {
+    width: 100%;
+    max-width: 340px;
+    background: var(--card);
+    border-radius: 24px;
+    border: 1px solid var(--border);
+    box-shadow: 0 1px 2px rgba(20, 24, 40, 0.04), 0 12px 32px rgba(20, 24, 40, 0.08);
+    overflow: hidden;
+  }
+
+  .card-inner {
+    padding: 40px 28px 32px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .avatar {
+    width: 84px;
+    height: 84px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    margin-bottom: 20px;
+    background: var(--blue-50);
+    color: var(--blue-600);
+  }
+
+  .avatar.storno {
+    background: var(--red-50);
+    color: var(--red-600);
+  }
+
+  .name {
+    font-size: 21px;
+    font-weight: 600;
+    margin: 0 0 4px;
+    letter-spacing: -0.01em;
+  }
+
+  .position {
+    font-size: 15px;
+    color: var(--muted);
+    margin: 0;
+  }
+
+  .divider {
+    width: 100%;
+    height: 1px;
+    background: var(--border);
+    margin: 28px 0 22px;
+  }
+
+  .id-row {
+    font-size: 13px;
+    color: var(--muted);
+    letter-spacing: 0.01em;
+  }
+
+  .id-row span {
+    color: var(--ink);
+    font-weight: 500;
+  }
+
+  .storno-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--red-50);
+    color: var(--red-600);
+    font-size: 13px;
+    font-weight: 600;
+    padding: 6px 14px;
+    border-radius: 100px;
+    margin-bottom: 6px;
+  }
+
+  .state {
+    padding: 48px 28px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 14px;
+  }
+
+  .state.error {
+    color: var(--red-600);
+  }
+
+  .footer-note {
+    text-align: center;
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 16px;
+    opacity: 0.7;
+  }
+</style>
+</head>
+<body>
+
+  <div id="root">
+    <div class="card">
+      <div class="card-inner state" id="loading">Wird geladen …</div>
+    </div>
+  </div>
+
+  <script>
+    // --- Supabase-Konfiguration ---
+    const SUPABASE_URL = "https://tgbqcgqvexgtlsnzqrdt.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_llrJStSeJvQyzcTuxGycHQ_R_WsgMug";
+
+    async function fetchRow(table, id) {
+      const url = `${SUPABASE_URL}/rest/v1/${table}?id=eq.${encodeURIComponent(id)}&select=*`;
+      const res = await fetch(url, {
+        headers: {
+          apikey: SUPABASE_KEY,
+          Authorization: `Bearer ${SUPABASE_KEY}`,
+        },
+      });
+      if (!res.ok) throw new Error("Anfrage fehlgeschlagen");
+      const rows = await res.json();
+      return rows[0] || null;
+    }
+
+    function initials(name) {
+      if (!name) return "?";
+      return name
+        .split(" ")
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((p) => p[0].toUpperCase())
+        .join("");
+    }
+
+    function renderState(html) {
+      document.getElementById("root").innerHTML = `<div class="card"><div class="card-inner">${html}</div></div>`;
+    }
+
+    function renderMitarbeiter(data) {
+      renderState(`
+        <div class="avatar">${initials(data.name)}</div>
+        <p class="name">${data.name || "Unbekannt"}</p>
+        <p class="position">${data.position || ""}</p>
+        <div class="divider"></div>
+        <div class="id-row">Mitarbeiter-ID <span>${data.id}</span></div>
+      `);
+    }
+
+    function renderStorno(data) {
+      renderState(`
+        <div class="avatar storno">✕</div>
+        <div class="storno-badge">Storno</div>
+        <p class="name">${data.label || "Storno"}</p>
+        <div class="divider"></div>
+        <div class="id-row">Beleg-ID <span>${data.id}</span></div>
+      `);
+    }
+
+    function renderNotFound(label) {
+      renderState(`<p style="color:#6b7280;font-size:14px;">Kein Eintrag gefunden für <strong>${label}</strong>.</p>`);
+    }
+
+    function renderError() {
+      renderState(`<p style="color:#c1443c;font-size:14px;">Die Daten konnten nicht geladen werden. Bitte später erneut versuchen.</p>`);
+    }
+
+    async function init() {
+      const path = window.location.pathname.replace(/\/+$/, ""); // trailing slash entfernen
+      const parts = path.split("/").filter(Boolean); // z. B. ["mitarbeiter", "emp-10234"]
+
+      if (parts.length !== 2) {
+        renderState(`<p style="font-size:14px;color:#6b7280;">Kein gültiger Link. Erwartet wird z. B. /mitarbeiter/emp-10234</p>`);
+        return;
+      }
+
+      const [type, id] = parts;
+
+      try {
+        if (type === "mitarbeiter") {
+          const data = await fetchRow("mitarbeiter", id);
+          data ? renderMitarbeiter(data) : renderNotFound(id);
+        } else if (type === "storno") {
+          const data = await fetchRow("storno", id);
+          data ? renderStorno(data) : renderNotFound(id);
+        } else {
+          renderState(`<p style="font-size:14px;color:#6b7280;">Unbekannter Kartentyp: ${type}</p>`);
+        }
+      } catch (e) {
+        renderError();
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>
