@@ -39,35 +39,49 @@
 
       .card {
             width: 100%;
-            max-width: 340px;
+            max-width: 480px;
             background: var(--card);
             border-radius: 24px;
             border: 1px solid var(--border);
             box-shadow: 0 1px 2px rgba(20, 24, 40, 0.04), 0 12px 32px rgba(20, 24, 40, 0.08);
             overflow: hidden;
+            min-height: calc(100dvh - 32px);
+            display: flex;
+            flex-direction: column;
       }
 
       .card-inner {
-            padding: 40px 28px 32px;
-            display: flex;
+    padding: 56px 32px 40px;
+            flex: 1;
+            justify-content: center;
+        display: flex;
             flex-direction: column;
             align-items: center;
             text-align: center;
       }
 
       .avatar {
-            width: 84px;
-            height: 84px;
+            width: 112px;
+            height: 112px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 26px;
+            font-size: 34px;
             font-weight: 600;
             letter-spacing: 0.01em;
             margin-bottom: 20px;
             background: var(--blue-50);
             color: var(--blue-600);
+            overflow: hidden;
+      }
+
+      .avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+            display: block;
       }
 
       .avatar.storno {
@@ -76,14 +90,14 @@
       }
 
       .name {
-            font-size: 21px;
+            font-size: 28px;
             font-weight: 600;
             margin: 0 0 4px;
             letter-spacing: -0.01em;
       }
 
       .position {
-            font-size: 15px;
+            font-size: 18px;
             color: var(--muted);
             margin: 0;
       }
@@ -92,7 +106,7 @@
             width: 100%;
             height: 1px;
             background: var(--border);
-            margin: 28px 0 22px;
+            margin: 40px 0 32px;
       }
 
       .id-row {
@@ -181,8 +195,8 @@
 
             function renderMitarbeiter(data) {
                     renderState(`
-                            <div class="avatar">${initials(data.name)}</div>
-                                    <p class="name">${data.name || "Unbekannt"}</p>
+          <div class="avatar">${data.photo ? '<img src="' + data.photo + '" alt="" />' : initials(data.name)}</div>
+          <p class="name">${data.name || "Unbekannt"}</p>
                                             <p class="position">${data.position || ""}</p>
                                                     <div class="divider"></div>
                                                             <div class="id-row">Mitarbeiter-ID <span>${data.id}</span></div>
@@ -227,6 +241,7 @@
                                                         id: id || "—",
                                                         name: params.get("name") || "",
                                                         position: params.get("position") || "",
+                                                                        photo: params.get("photo") || "",
                                           });
                               } else if (type === "storno") {
                                           renderStorno({
