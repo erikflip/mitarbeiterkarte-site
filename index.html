@@ -84,6 +84,10 @@
             display: block;
       }
 
+      .avatar-fallback {
+            display: none;
+      }
+
       .avatar.storno {
             background: var(--red-50);
             color: var(--red-600);
@@ -189,13 +193,20 @@
                       .join("");
             }
 
+            function onAvatarImgError(img) {
+                    img.style.display = 'none';
+                    if (img.nextElementSibling) {
+                              img.nextElementSibling.style.display = 'inline';
+                    }
+            }
+
             function renderState(html) {
                     document.getElementById("root").innerHTML = `<div class="card"><div class="card-inner">${html}</div></div>`;
             }
 
             function renderMitarbeiter(data) {
                     renderState(`
-          <div class="avatar">${data.photo ? '<img src="' + data.photo + '" alt="" />' : initials(data.name)}</div>
+          <div class="avatar">${data.photo ? '<img src="' + data.photo + '" alt="" onerror="onAvatarImgError(this)" /><span class="avatar-fallback">' + initials(data.name) + '</span>' : initials(data.name)}</div>
           <p class="name">${data.name || "Unbekannt"}</p>
                                             <p class="position">${data.position || ""}</p>
                                                     <div class="divider"></div>
